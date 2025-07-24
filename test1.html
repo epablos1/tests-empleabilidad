@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Empleabilidad Profesional – Lic. Eliana Pablos</title>
+    <!-- CDN de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fuentes de Google - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CDN de jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        /* REINICIOS AGRESIVOS Y OVERFLOW-X */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box; /* Asegura un modelo de caja consistente */
+            overflow-x: hidden; /* Previene scroll horizontal no deseado */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Fondo azul-gris claro */
+            color: #334155; /* Texto más oscuro para legibilidad */
+            min-height: 100vh; /* Asegura que el body ocupe al menos toda la altura de la ventana */
+            
+            /* CENTRADO CON GRID */
+            display: grid;
+            place-items: center; /* Centra el contenido tanto horizontal como verticalmente */
+        }
+        
+        /* Asegurarse que las imágenes no desborden */
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block; /* Para eliminar cualquier espacio extra debajo de las imágenes */
+        }
+
+        /* Estilos de botón personalizados para selección única */
+        .answer-button {
+            /* Modificación: Tono más oscuro para un aspecto profesional */
+            background-image: linear-gradient(to right, #1e3a8a 0%, #172554 100%); /* Azul/Índigo más oscuro */
+            box-shadow: 0 4px 15px 0 rgba(23, 37, 84, 0.5); /* Sombra acorde */
+            transition: all 0.3s ease-in-out;
+            transform: scale(1);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+
+        .answer-button:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 20px 0 rgba(23, 37, 84, 0.75);
+            border-color: #93c5fd; /* Borde azul claro al pasar el ratón */
+        }
+
+        /* Color de botón seleccionado para selección única */
+        .answer-button.selected {
+            background-image: linear-gradient(to right, #0ea5e9 0%, #38bdf8 50%, #7dd3fc 100%); /* Gradiente celeste */
+            box-shadow: 0 4px 15px 0 rgba(14, 165, 233, 0.75);
+            border-color: #a7f3d0; /* Borde celeste claro */
+            animation: none; /* Detener el pulso cuando está seleccionado */
+        }
+
+        /* Estilos para los botones de navegación y descarga de PDF */
+        #start-test-button, /* Añadido el botón de inicio */
+        #prev-question-button,
+        #next-question-button,
+        #download-pdf-button {
+            background-image: linear-gradient(to right, #1e3a8a 0%, #172554 100%); /* Mismo gradiente que .answer-button */
+            box-shadow: 0 4px 15px 0 rgba(23, 37, 84, 0.5); /* Misma sombra que .answer-button */
+            transition: all 0.3s ease-in-out;
+            transform: scale(1);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+            color: white; /* Asegurar que el texto sea blanco */
+            font-weight: bold;
+            padding: 0.75rem 1.5rem; /* py-3 px-6 */
+            border-radius: 9999px; /* rounded-full */
+        }
+
+        #start-test-button:hover, /* Añadido el hover para el botón de inicio */
+        #prev-question-button:hover,
+        #next-question-button:hover,
+        #download-pdf-button:hover {
+            transform: scale(1.05); /* Ligeramente más grande al pasar el ratón */
+            box-shadow: 0 6px 20px 0 rgba(23, 37, 84, 0.75); /* Sombra más pronunciada */
+            border-color: #93c5fd; /* Borde azul claro al pasar el ratón */
+        }
+
+
+        /* Barra de desplazamiento personalizada para una mejor estética */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        /* Estilo del modal */
+        .modal {
+            position: fixed; /* Posición fija */
+            z-index: 1000; /* Por encima de todo */
+            left: 0;
+            top: 0;
+            width: 100%; /* Ancho completo */
+            height: 100%; /* Alto completo */
+            overflow: auto; /* Habilitar desplazamiento si es necesario */
+            background-color: rgba(0,0,0,0.4);
+            align-items: center;
+            justify-content: center;
+            /* Controlado por la clase 'hidden' de Tailwind */
+        }
+        /* Cuando el modal no tiene la clase 'hidden', se muestra como flex */
+        .modal:not(.hidden) {
+            display: flex;
+        }
+
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 80%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Estilo para los checkboxes personalizados (opciones múltiples) */
+        .custom-checkbox-container {
+            display: block;
+            position: relative;
+            padding: 12px 24px; /* Ajustado para un mejor aspecto de rectángulo */
+            margin-bottom: 12px;
+            cursor: pointer;
+            font-size: 1.125rem; /* text-lg */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            text-align: left;
+            /* Modificación: Fondo coloreado para opciones múltiples */
+            background-color: #e0f2fe; /* Azul muy claro */
+            border: 1px solid #93c5fd; /* Borde azul claro */
+            border-radius: 8px; /* Bordes redondeados */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Sombra sutil */
+            transition: all 0.2s ease-in-out;
+            width: 100%; /* Asegura que ocupe el ancho disponible en el flex/grid */
+            max-width: 400px; /* Ancho máximo para las opciones múltiples */
+            margin-left: auto; /* Centra el elemento si es más estrecho que el contenedor */
+            margin-right: auto; /* Centra el elemento si es más estrecho que el contenedor */
+        }
+
+        .custom-checkbox-container input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: 14px; /* Ajustado para centrar verticalmente */
+            left: 12px;
+            background-color: #eee; /* Mantiene el fondo gris claro para la tilde */
+            border-radius: 4px; /* Bordes redondeados para el checkmark */
+            border: 1px solid #ccc; /* Mantiene el borde gris */
+            transition: all 0.2s ease-in-out;
+            height: 20px; /* Tamaño del checkmark */
+            width: 20px; /* Tamaño del checkmark */
+        }
+
+        .custom-checkbox-container:hover .checkmark {
+            background-color: #ddd;
+        }
+
+        /* Modificación para que el checkmark no cambie el fondo del cuadrado, solo muestre la tilde */
+        .custom-checkbox-container input:checked ~ .checkmark {
+            background-color: #eee; /* Mantiene el fondo gris claro */
+            border-color: #ccc; /* Mantiene el borde gris */
+        }
+
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 7px; /* Posición del check */
+            top: 3px; /* Posición del check */
+            width: 6px;
+            height: 12px;
+            border: solid #2563eb; /* Color azul para la tilde */
+            border-width: 0 3px 3px 0;
+            -webkit-transform: rotate(45deg);
+            -ms-transform: rotate(45deg);
+            transform: rotate(45deg);
+        }
+
+        /* Muestra la tilde cuando el input está checked */
+        .custom-checkbox-container input:checked ~ .checkmark:after {
+            display: block;
+        }
+
+        /* Estilo para el contenedor de texto de la opción múltiple */
+        .custom-checkbox-container .option-text {
+            margin-left: 30px; /* Espacio para el checkmark */
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Nuevo contenedor para centrar todo el contenido principal -->
+    <div class="w-full max-w-4xl mx-auto p-4">
+        <!-- Encabezado -->
+        <header class="bg-white shadow-lg rounded-lg p-6 mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-2">Test de Empleabilidad Profesional</h1>
+            <p class="text-lg text-gray-600">Lic. Eliana Pablos</p>
+        </header>
+
+        <!-- Contenedor principal del test -->
+        <main id="test-container" class="w-full bg-white shadow-lg rounded-lg p-8 mb-8">
+            <!-- Pantalla de introducción -->
+            <div id="intro-screen" class="text-center">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Bienvenido al Test de Empleabilidad Profesional</h2>
+                <p class="text-gray-600 mb-6">Este test interactivo te ayudará a evaluar tu empleabilidad en 5 áreas clave. Responde con honestidad para obtener un diagnóstico preciso y sugerencias personalizadas.</p>
+                <button id="start-test-button" class="py-3 px-8 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+                    Comenzar Test
+                </button>
+            </div>
+
+            <!-- Sección de preguntas del test (oculta por defecto) -->
+            <div id="question-section" class="hidden">
+                <h3 id="block-title" class="text-xl md:text-2xl font-bold text-gray-800 mb-4 text-center"></h3>
+                <!-- Se simplificó el layout interno de question-section para un centrado más consistente -->
+                <div class="flex flex-col items-center mb-6">
+                    <div class="w-full flex justify-center items-center mb-4">
+                        <img id="question-image" src="" alt="Imagen de la pregunta" class="rounded-lg shadow-md max-h-64 object-cover w-full max-w-sm hidden">
+                        <audio id="question-audio" controls class="hidden w-full max-w-xs mx-auto"></audio>
+                        <!-- Controles específicos para el tipo 'audio_upload' -->
+                        <div id="audio-upload-controls" class="hidden flex flex-col items-center w-full space-y-4 max-w-sm">
+                            <input type="file" id="audio-file-input" accept="audio/*" class="p-2 border border-gray-300 rounded-md w-full max-w-xs">
+                            <audio id="uploaded-audio-player" controls class="w-full max-w-xs"></audio>
+                            <p id="audio-prompt-message" class="text-sm text-gray-600 hidden">Sube un audio para continuar.</p>
+                            <button id="continue-audio-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out" disabled>
+                                Continuar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="w-full text-center">
+                        <p id="question-text" class="text-lg text-gray-700 mb-6 px-4"></p>
+                        <div id="answer-options" class="flex flex-col items-center gap-4 w-full">
+                            <!-- Los botones de respuesta o checkboxes se insertarán dinámicamente aquí -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-8">
+                    <!-- Botón Anterior con el mismo estilo que Siguiente -->
+                    <button id="prev-question-button" class="py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                        Anterior
+                    </button>
+                    <!-- Botón Siguiente siempre a la derecha -->
+                    <button id="next-question-button" class="py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out ml-auto">
+                        Siguiente
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sección de resultados (oculta por defecto) -->
+            <div id="results-section" class="hidden text-center p-6">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">¡Test Completado!</h2>
+                <p class="text-xl text-gray-700 mb-8">Aquí tienes tu diagnóstico de empleabilidad profesional:</p>
+
+                <div id="overall-diagnosis" class="bg-blue-100 border border-blue-300 rounded-lg p-6 mb-8 shadow-md">
+                    <h3 class="text-2xl font-semibold text-blue-800 mb-3">Diagnóstico General: <span id="overall-level" class="font-bold"></span></h3>
+                    <p id="overall-suggestions" class="text-blue-700 leading-relaxed"></p>
+                </div>
+
+                <div id="block-results" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Los resultados de los bloques se insertarán dinámicamente aquí -->
+                </div>
+
+                <button id="download-pdf-button" class="py-3 px-8 rounded-full shadow-lg">
+                    Descargar Diagnóstico en PDF
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Alerta/Modal personalizado -->
+    <div id="custom-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <p id="modal-message" class="text-lg text-gray-800"></p>
+            <button id="modal-ok-button" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out">
+                OK
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Asegurarse de que el DOM esté completamente cargado antes de ejecutar el script
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializar jsPDF
+            const { jsPDF } = window.jspdf;
+
+            // Función para obtener URL de archivo subido (simulado para este entorno)
+            function getUploadedFileUrl(fileName) {
+                // Este mapa DEBE coincidir con los contentFetchId reales de los archivos subidos
+                // Si el entorno de Canvas proporciona una URL directa, se usaría directamente el fileName
+                const fileMap = {
+                    'oficinavacia.jpg-a390fd47-d470-4bb6-add2-9ddddf4207a5': 'https://firebasestorage.googleapis.com/v0/b/generative-ai-sandbox-web.appspot.com/o/uploaded%3Aoficinavacia.jpg-a390fd47-d470-4bb6-add2-9ddddf4207a5?alt=media&token=a390fd47-d470-4bb6-add2-9ddddf4207a5',
+                    'nuevaherramientajpg.jpg-0883bd0c-9487-4218-8053-c5f42cb633dc': 'https://firebasestorage.googleapis.com/v0/b/generative-ai-sandbox-web.appspot.com/o/uploaded%3Anuevaherramientajpg.jpg-0883bd0c-9487-4218-8053-c5f42cb633dc?alt=media&token=0883bd0c-9487-4218-8053-c5f42cb633dc',
+                    'image (3).jpg-272eebd5-c901-44f0-8972-ad79ff1c27af': 'https://firebasestorage.googleapis.com/v0/b/generative-ai-sandbox-web.appspot.com/o/uploaded%3Aimage%20(3).jpg-272eebd5-c901-44f0-8972-ad79ff1c27af?alt=media&token=272eebd5-c901-44f0-8972-ad79ff1c27af',
+                    'mujer con expresion.jpg-bd57aedf-2cc6-40e9-b300-172cd466850b': 'https://firebasestorage.googleapis.com/v0/b/generative-ai-sandbox-web.appspot.com/o/uploaded%3Amujer%20con%20expresion.jpg-bd57aedf-2cc6-40e9-b300-172cd466850b?alt=media&token=bd57aedf-2cc6-40e9-b300-172cd466850b',
+                    'coordinacion.jpg-924fd01b-df36-4e9d-9b4f-659d8b1447fb': 'https://firebasestorage.googleapis.com/v0/b/generative-ai-sandbox-web.appspot.com/o/uploaded%3Acoordinacion.jpg-924fd01b-df36-4e9d-9b4f-659d8b1447fb?alt=media&token=924fd01b-df36-4e9d-9b4f-659d8b1447fb',
+                    'assets_task_01jy6xf1fpfrb92sdp63mqbbr1_1750431486_img_0.webp-615bcd97-286f-42b9-9a84-72a7d1e73ef3': 'https://firebasestorage.googleapis.com/v0/b/generative-ai-sandbox-web.appspot.com/o/uploaded%3Aassets_task_01jy6xf1fpfrb92sdp63mqbbr1_1750431486_img_0.webp-615bcd97-286f-42b9-9a84-72a7d1e73ef3?alt=media&token=615bcd97-286f-42b9-9a84-72a7d1e73ef3',
+                    'assets_task_01jy6xkv1zfg3rg0fddd90sz8a_1750431663_img_3.webp-14dbd916-f0da-44ee-b6b4-b900ebed699a': 'https://firebasestorage.googleapis.com/v0/b/generative-ai-sandbox-web.appspot.com/o/uploaded%3Aassets_task_01jy6xkv1zfg3rg0fddd90sz8a_1750431663_img_3.webp-14dbd916-f0da-44ee-b6b4-b900ebed699a?alt=media&token=14dbd916-f0da-44ee-b6b4-b900ebed699a',
+                    'Escritorio.jpg-d516b748-fba1-413f-a774-13c0792d72b0': 'https://firebasestorage.googleapis.com/v0/b/generative-ai-sandbox-web.appspot.com/o/uploaded%3AEscritorio.jpg-d516b748-fba1-413f-a774-13c0792d72b0?alt=media&token=d516b748-fba1-413f-a774-13c0792d72b0',
+                    'image (4).jpg-c6c9e58c-9ec2-48d0-ab38-c1a95476edd7': 'https://firebasestorage.googleapis.com/v0/b/generative-ai-sandbox-web.appspot.com/o/uploaded%3Aimage%20(4).jpg-c6c9e58c-9ec2-48d0-ab38-c1a95476edd7?alt=media&token=c6c9e58c-9ec2-48d0-ab38-c1a95476edd7',
+                    'equilibrio tenso.webp-0a51d480-25df-481d-8779-f14b3fc571eb': 'https://firebasestorage.googleapis.com/v0/b/generative-ai-sandbox-web.appspot.com/o/uploaded%3Aequilibrio%20tenso.webp-0a51d480-25df-481d-8779-f14b3fc571eb?alt=media&token=0a51d480-25df-481d-8779-f14b3fc571eb',
+                    'graba.jpg-44590dbf-af8a-49cb-825a-d72d2e1a2206': 'https://firebasestorage.googleapis.com/v0/b/generative-ai-sandbox-web.appspot.com/o/uploaded%3Agraba.jpg-44590dbf-af8a-49cb-825a-d72d2e1a2206?alt=media&token=44590dbf-af8a-49cb-825a-d72d2e1a2206'
+                };
+                // Si el fileName ya es una URL completa (como placehold.co o SoundHelix), usarla directamente
+                if (fileName && (fileName.startsWith('http://') || fileName.startsWith('https://'))) {
+                    return fileName;
+                }
+                // Buscar en el mapa o devolver null si no se encuentra
+                return fileMap[fileName] || null;
+            }
+
+
+            // Estructura de datos del test
+            const testData = {
+                blocks: [
+                    {
+                        id: 'A',
+                        title: 'Bloque A – Autoevaluación Realista',
+                        questions: [
+                            {
+                                id: 'A1',
+                                text: 'Imagina que te encuentras en una oficina vacía con un cartel que dice “Se busca personal”. ¿Qué sentimiento predomina en ti?',
+                                type: 'single',
+                                image: null, // Imagen eliminada
+                                options: [
+                                    { text: 'Entusiasmo y curiosidad por la oportunidad.', points: 3, feedback: { strength: 'Proactividad, optimismo.' } },
+                                    { text: 'Incertidumbre y un poco de ansiedad.', points: 2, feedback: { area: 'Manejo de la incertidumbre.' } },
+                                    { text: 'Indiferencia, no me siento identificado.', points: 1, feedback: { area: 'Autoconocimiento, motivación.' } }
+                                ]
+                            },
+                            {
+                                id: 'A2',
+                                text: 'Se te presenta una nueva herramienta digital esencial para tu trabajo. ¿Cómo reaccionas?',
+                                type: 'single',
+                                image: null, // Imagen eliminada
+                                options: [
+                                    { text: 'La investigo a fondo y busco tutoriales para dominarla rápidamente.', points: 3, feedback: { strength: 'Adaptabilidad, proactividad en el aprendizaje.' } },
+                                    { text: 'Espero a que alguien me la explique o la uso solo si es estrictamente necesario.', points: 2, feedback: { area: 'Iniciativa en el aprendizaje.' } },
+                                    { text: 'Me resisto a usarla, prefiero mis métodos habituales.', points: 1, feedback: { area: 'Resistencia al cambio, obsolescencia.' } }
+                                ]
+                            },
+                            {
+                                id: 'A3',
+                                text: 'Reflexiona sobre tus habilidades de comunicación. ¿Qué aspectos de tu tono de voz, fluidez y ritmo consideras que son tus puntos fuertes y cuáles podrías mejorar?',
+                                type: 'text_input', // Cambiado a text_input
+                                image: null, // Imagen eliminada
+                                feedback_template: {
+                                    good: 'Buena reflexión sobre tu tono y fluidez. Intenta ser más específico/a con ejemplos concretos de cómo podrías mejorar tus áreas débiles.',
+                                    excellent: '¡Excelente autoevaluación! Has identificado con precisión tus fortalezas y debilidades en tono, fluidez y ritmo, y y cómo influyen en tu comunicación.',
+                                    poor: 'Tu respuesta es muy general. Reflexiona nuevamente y trata de identificar elementos específicos de tu tono, fluidez o ritmo que necesiten mejora o que sean un punto fuerte.',
+                                    keywords: ['tono', 'fluidez', 'ritmo', 'fuerte', 'mejorar', 'pausas', 'velocidad', 'claridad', 'dicción']
+                                },
+                                options: [{ text: 'Respuesta abierta', points: 0 }] // Dummy option for structure
+                            },
+                            {
+                                id: 'A4',
+                                text: '¿Cuáles de las siguientes son tus habilidades más fuertes? (Puedes seleccionar varias)',
+                                type: 'multiple',
+                                image: null, // Imagen eliminada
+                                options: [
+                                    { text: 'Resolución de problemas complejos.', points: 3, feedback: { strength: 'Pensamiento analítico, resiliencia.' } },
+                                    { text: 'Creatividad e innovación.', points: 3, feedback: { strength: 'Innovación, pensamiento lateral.' } },
+                                    { text: 'Liderazgo y gestión de equipos.', points: 3, feedback: { strength: 'Liderazgo, gestión de personas.' } },
+                                    { text: 'Organización y planificación.', points: 2, feedback: { strength: 'Organización, eficiencia.' } },
+                                    { text: 'Empatía y trabajo en equipo.', points: 2, feedback: { strength: 'Colaboración, inteligencia emocional.' } }
+                                ]
+                            },
+                            {
+                                id: 'A5',
+                                text: 'Cuando te enfrentas a un desafío profesional, ¿cuál de estas frases te representa mejor?',
+                                type: 'single',
+                                image: null, // Imagen eliminada
+                                options: [
+                                    { text: '“Cada obstáculo es una oportunidad para aprender y crecer.”', points: 3, feedback: { strength: 'Mentalidad de crecimiento, resiliencia.' } },
+                                    { text: '“Espero que esto no sea demasiado difícil.”', points: 2, feedback: { area: 'Confianza, proactividad.' } },
+                                    { text: '“Prefiero evitar situaciones complicadas.”', points: 1, feedback: { area: 'Evitación de desafíos, zona de confort.' } }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: 'B',
+                        title: 'Bloque B – Habilidades Transferibles',
+                        questions: [
+                            {
+                                id: 'B1',
+                                text: 'Te asignan la coordinación de un evento importante. ¿Cuál sería tu primer paso?',
+                                type: 'single',
+                                image: null, // Imagen eliminada
+                                options: [
+                                    { text: 'Elaborar un plan detallado con cronograma y responsabilidades.', points: 3, feedback: { strength: 'Planificación, organización.' } },
+                                    { text: 'Delegar tareas a mi equipo y esperar resultados.', points: 2, feedback: { area: 'Supervisión, seguimiento.' } },
+                                    { text: 'Empezar a ejecutar las tareas más urgentes sin un plan previo.', points: 1, feedback: { area: 'Estrategia, gestión del tiempo.' } }
+                                ]
+                            },
+                            {
+                                id: 'B2',
+                                text: '¿Qué herramientas digitales manejas con soltura? (Selecciona todas las que apliquen)',
+                                type: 'multiple',
+                                image: null, // Imagen eliminada
+                                options: [
+                                    { text: 'Suite Office (Word, Excel, PowerPoint).', points: 2, feedback: { strength: 'Dominio de ofimática.' } },
+                                    { text: 'Herramientas de gestión de proyectos (Trello, Asana).', points: 3, feedback: { strength: 'Gestión de proyectos.' } },
+                                    { text: 'Plataformas de videollamadas (Zoom, Meet).', points: 2, feedback: { strength: 'Comunicación remota.' } },
+                                    { text: 'Software de diseño gráfico (Canva, Photoshop básico).', points: 3, feedback: { strength: 'Habilidades creativas, marketing.' } },
+                                    { text: 'CRM (Customer Relationship Management).', points: 3, feedback: { strength: 'Gestión de clientes.' } }
+                                ]
+                            },
+                            {
+                                id: 'B3',
+                                text: 'En una discusión en la oficina sobre un proyecto, ¿cómo abordas la situación?',
+                                type: 'single',
+                                image: null, // Imagen eliminada
+                                options: [
+                                    { text: 'Escucho todas las partes, propongo soluciones y busco consenso.', points: 3, feedback: { strength: 'Resolución de conflictos, mediación.' } },
+                                    { text: 'Expongo mi punto de vista y defiendo mi posición firmemente.', points: 2, feedback: { area: 'Escucha activa, flexibilidad.' } },
+                                    { text: 'Me mantengo al margen para evitar confrontaciones.', points: 1, feedback: { area: 'Asertividad, participación.' } }
+                                ]
+                            },
+                            {
+                                id: 'B4',
+                                text: 'Te cambian de rol o de equipo en tu trabajo. ¿Cómo te adaptas a este nuevo entorno?',
+                                type: 'single',
+                                image: null, // Imagen eliminada
+                                options: [
+                                    { text: 'Investigo sobre el nuevo rol/equipo, pregunto y me integro activamente.', points: 3, feedback: { strength: 'Adaptabilidad, proactividad en la integración.' } },
+                                    { text: 'Espero a que me asignen tareas y me adapto gradualmente.', points: 2, feedback: { area: 'Iniciativa, rapidez de adaptación.' } },
+                                    { text: 'Me siento incómodo y me cuesta adaptarme a los cambios.', points: 1, feedback: { area: 'Resistencia al cambio, flexibilidad.' } }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: 'C',
+                        title: 'Bloque C – Comunicación y Presentación Personal',
+                        questions: [
+                            {
+                                id: 'C1',
+                                text: 'Para esta sección, por favor, sube un audio de aproximadamente 30-60 segundos presentándote profesionalmente. Luego, escúchalo para responder las siguientes preguntas.',
+                                type: 'audio_upload',
+                                image: 'https://placehold.co/600x400/e0f2fe/0369a1?text=Sube+Tu+Audio', // Imagen de marcador de posición para audio upload
+                                options: [{ text: 'Audio Upload', points: 0 }] // Dummy option for structure
+                            },
+                            {
+                                id: 'C2',
+                                text: 'Después de escuchar tu audio, ¿qué aspectos de tu tono de voz, fluidez y ritmo consideras que son tus puntos fuertes y cuáles podrías mejorar?',
+                                type: 'text_input',
+                                feedback_template: {
+                                    good: 'Buena reflexión sobre tu tono y fluidez. Intenta ser más específico/a con ejemplos concretos de cómo podrías mejorar tus áreas débiles.',
+                                    excellent: '¡Excelente autoevaluación! Has identificado con precisión tus fortalezas y debilidades en tono, fluidez y ritmo, y cómo influyen en tu comunicación.',
+                                    poor: 'Tu respuesta es muy general. Escucha tu audio nuevamente y trata de identificar elementos específicos de tu tono, fluidez o ritmo que necesiten mejora o que sean un punto fuerte.',
+                                    keywords: ['tono', 'fluidez', 'ritmo', 'fuerte', 'mejorar', 'pausas', 'velocidad', 'claridad', 'dicción']
+                                },
+                                options: [{ text: 'Respuesta abierta', points: 0 }]
+                            },
+                            {
+                                id: 'C3',
+                                text: 'Identifica al menos dos "muletillas" o pausas innecesarias que hayas notado en tu audio. ¿Cómo podrías reemplazarlas o eliminarlas para sonar más seguro/a y conciso/a?',
+                                type: 'text_input',
+                                feedback_template: {
+                                    good: 'Has identificado algunas muletillas. Ahora, piensa en estrategias concretas para eliminarlas o reemplazarlas con pausas efectivas.',
+                                    excellent: 'Muy bien. No solo identificaste tus muletillas, sino que también propusiste estrategias claras y efectivas para mejorar la concisión y seguridad en tu habla.',
+                                    poor: 'No has identificado muletillas o tu respuesta es muy vaga. Vuelve a escuchar atentamente, buscando palabras de relleno como "ehhh", "este", "bueno", o pausas prolongadas sin sentido.',
+                                    keywords: ['muletillas', 'pausas', 'eliminar', 'reemplazar', 'seguro', 'conciso', 'estrategia', 'silencio', 'respiración']
+                                },
+                                options: [{ text: 'Respuesta abierta', points: 0 }]
+                            },
+                            {
+                                id: 'C4',
+                                text: 'Evalúa la claridad y concisión de tu mensaje principal. ¿Se entiende fácilmente quién eres, qué haces y qué valor aportas en el tiempo que te diste?',
+                                type: 'text_input',
+                                feedback_template: {
+                                    good: 'Tu mensaje es comprensible, pero podría ser más conciso o impactante. Revisa si cada frase suma al objetivo de presentarte profesionalmente.',
+                                    excellent: '¡Impecable! Tu mensaje es claro, conciso y transmite eficazmente quién eres, qué haces y el valor que puedes aportar. Ha demostrado gran capacidad de síntesis.',
+                                    poor: 'Parece que tu mensaje principal no fue muy claro o conciso. Reestructura tu presentación, enfocándote en lo esencial: quién eres, qué ofreces y por qué es relevante para tu audiencia.',
+                                    keywords: ['claridad', 'concisión', 'mensaje', 'valor', 'quién', 'haces', 'aportas', 'relevante', 'impacto', 'sintesis']
+                                },
+                                options: [{ text: 'Respuesta abierta', points: 0 }]
+                            },
+                            {
+                                id: 'C5',
+                                text: 'En una entrevista te piden: “Contame sobre vos”. ¿Qué destacarías en tu respuesta? (Respuesta Abierta)',
+                                type: 'text_input', // Entrada de texto libre
+                                feedback_template: {
+                                    good: 'Tu respuesta es un buen punto de partida. Para mejorar, considera incluir una estructura clara: presente (quién eres ahora), pasado (experiencia relevante) y futuro (hacia dónde vas y cómo la empresa encaja).',
+                                    excellent: '¡Excelente! Tu respuesta cubre los puntos clave: quién eres, qué has logrado y cómo encajas con la empresa. Demuestra claridad, concisión y relevancia.',
+                                    poor: 'Tu respuesta es muy breve. Recuerda que esta es tu oportunidad para venderte. Intenta incluir tus fortalezas, experiencia y por qué estás interesado/a en este rol.',
+                                    keywords: ['experiencia', 'logros', 'habilidades', 'objetivos', 'valor', 'futuro', 'rol', 'pasión', 'aprender', 'crecer', 'contribuir'] // Palabras clave para sugerencias internas
+                                },
+                                options: [{ text: 'Respuesta abierta', points: 0 }]
+                            },
+                            {
+                                id: 'C6',
+                                text: '¿Cuáles de estas frases sueles usar en entrevistas para destacar tus puntos fuertes? (Selecciona todas las que apliquen)',
+                                type: 'multiple',
+                                image: null, // Imagen eliminada
+                                options: [
+                                    { text: '“Soy un solucionador de problemas proactivo.”', points: 3, feedback: { strength: 'Proactividad, orientación a resultados.' } },
+                                    { text: '“Mi mayor fortaleza es mi capacidad de adaptarme.”', points: 3, feedback: { strength: 'Adaptabilidad, flexibilidad.' } },
+                                    { text: '“Disfruto trabajando en equipo y colaborando.”', points: 2, feedback: { strength: 'Colaboración, trabajo en equipo.' } },
+                                    { text: '“Busco constantemente nuevas formas de mejorar.”', points: 3, feedback: { strength: 'Mejora continua, iniciativa.' } }
+                                ]
+                            },
+                            {
+                                id: 'C7',
+                                text: '¿Qué tan cómodo/a te sientes hablando frente a una cámara para una videollamada o entrevista virtual?',
+                                type: 'single',
+                                image: null, // Imagen eliminada
+                                options: [
+                                    { text: 'Muy cómodo/a, me desenvuelvo con naturalidad.', points: 3, feedback: { strength: 'Confianza, habilidades de presentación virtual.' } },
+                                    { text: 'Algo incómodo/a, pero puedo manejarlo.', points: 2, feedback: { area: 'Práctica en comunicación virtual.' } },
+                                    { text: 'Muy incómodo/a, lo evito si es posible.', points: 1, feedback: { area: 'Manejo de la ansiedad, habilidades virtuales.' } }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: 'D',
+                        title: 'Bloque D – Estrategia de Búsqueda Laboral',
+                        questions: [
+                            {
+                                id: 'D1',
+                                text: 'Cuando buscas ofertas de empleo, ¿cuál es tu prioridad principal?',
+                                type: 'single',
+                                image: null, // Imagen eliminada
+                                options: [
+                                    { text: 'Que el puesto se alinee con mis objetivos de carrera a largo plazo.', points: 3, feedback: { strength: 'Visión estratégica, planificación de carrera.' } },
+                                    { text: 'El salario y los beneficios.', points: 2, feedback: { area: 'Enfoque integral en la búsqueda.' } },
+                                    { text: 'La cercanía a mi domicilio.', points: 1, feedback: { area: 'Flexibilidad, prioridades.' } }
+                                ]
+                            },
+                            {
+                                id: 'D2',
+                                text: '¿Llevas un registro de las postulaciones que realizas (empresas, fechas, resultados)?',
+                                type: 'single',
+                                image: null, // Imagen eliminada
+                                options: [
+                                    { text: 'Sí, utilizo una hoja de cálculo o una herramienta específica.', points: 3, feedback: { strength: 'Organización, seguimiento proactivo.' } },
+                                    { text: 'A veces, lo hago mentalmente.', points: 2, feedback: { area: 'Metodología de seguimiento.' } },
+                                    { text: 'No, simplemente postulo y espero.', points: 1, feedback: { area: 'Estrategia de búsqueda, control.' } }
+                                ]
+                            },
+                            {
+                                id: 'D3',
+                                text: 'Recibes una oferta de empleo ideal, pero te piden una respuesta en 24 horas. ¿Cómo reaccionas?',
+                                type: 'single',
+                                image: null, // Imagen eliminada
+                                options: [
+                                    { text: 'Agradezco, pido un poco más de tiempo si lo necesito y evalúo rápidamente.', points: 3, feedback: { strength: 'Negociación, toma de decisiones bajo presión.' } },
+                                    { text: 'Acepto de inmediato para no perder la oportunidad.', points: 2, feedback: { area: 'Análisis, gestión de expectativas.' } },
+                                    { text: 'Me siento presionado/a y no sé qué hacer.', points: 1, feedback: { area: 'Manejo del estrés, asertividad.' } }
+                                ]
+                            },
+                            {
+                                id: 'D4',
+                                text: '¿Qué tan activo/a eres en el networking profesional (eventos, LinkedIn, contactos)?',
+                                type: 'single',
+                                image: null, // Imagen eliminada
+                                options: [
+                                    { text: 'Muy activo/a, busco constantemente ampliar mi red de contactos.', points: 3, feedback: { strength: 'Networking, proactividad en la conexión.' } },
+                                    { text: 'Moderadamente activo/a, me conecto si surge la oportunidad.', points: 2, feedback: { area: 'Desarrollo de red de contactos.' } },
+                                    { text: 'Poco o nada activo/a, prefiero que las oportunidades lleguen solas.', points: 1, feedback: { area: 'Iniciativa, visibilidad.' } }
+                                ]
+                            },
+                            {
+                                id: 'D5',
+                                text: '¿Con qué frecuencia dedicas tiempo a buscar empleo activamente?',
+                                type: 'single',
+                                image: null, // Imagen eliminada
+                                options: [
+                                    { text: 'Diariamente o casi todos los días.', points: 3, feedback: { strength: 'Constancia, disciplina en la búsqueda.' } },
+                                    { text: 'Varias veces a la semana.', points: 2, feedback: { area: 'Intensidad de la búsqueda.' } },
+                                    { text: 'Cuando me acuerdo o cada tanto.', points: 1, feedback: { area: 'Compromiso, planificación.' } }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: 'E',
+                        title: 'Bloque E – Documentación de Empleabilidad',
+                        questions: [
+                            {
+                                id: 'E1',
+                                text: '¿Cuáles de los siguientes elementos *debe tener* un buen CV para ser efectivo en la búsqueda laboral? (Selecciona todos los que consideres correctos)',
+                                type: 'multiple',
+                                image: null, // Imagen eliminada
+                                options: [
+                                    { text: 'Información de contacto actualizada (email, teléfono, LinkedIn).', points: 3, correct: true, feedback: { strength: 'Identificación de contacto profesional.', area: 'Revisar información de contacto.' } },
+                                    { text: 'Un resumen o perfil profesional que destaque tus puntos clave.', points: 3, correct: true, feedback: { strength: 'Comprensión del valor del perfil profesional.', area: 'Desarrollar un perfil profesional conciso.' } },
+                                    { text: 'Experiencia laboral detallada con descripciones de tareas y logros cuantificables.', points: 3, correct: true, feedback: { strength: 'Enfoque en logros y cuantificación.', area: 'Cuantificar logros en la experiencia laboral.' } },
+                                    { text: 'Lista de todos los cursos y talleres que tomaste, sin importar su relevancia para el puesto.', points: 0, correct: false, feedback: { strength: '', area: 'Priorizar la relevancia de la formación.' } },
+                                    { text: 'Educación y certificaciones relevantes para el área de interés.', points: 3, correct: true, feedback: { strength: 'Reconocimiento de la importancia de la formación relevante.', area: 'Incluir solo formación relevante.' } },
+                                    { text: 'Habilidades técnicas (software, idiomas) y blandas (trabajo en equipo, comunicación).', points: 3, correct: true, feedback: { strength: 'Amplitud en la descripción de habilidades.', area: 'Detallar habilidades técnicas y blandas.' } },
+                                    { text: 'Una fotografía de cuerpo entero.', points: 0, correct: false, feedback: { strength: '', area: 'Revisar el uso adecuado de fotografías en el CV.' } },
+                                    { text: 'Formato limpio, legible y profesional, adaptado al sector.', points: 3, correct: true, feedback: { strength: 'Comprensión de la importancia del formato profesional.', area: 'Mejorar el formato y legibilidad del CV.' } },
+                                    { text: 'Un listado extenso de referencias personales.', points: 0, correct: false, feedback: { strength: '', area: 'Manejo adecuado de referencias (no listarlas directamente).' } },
+                                    { text: 'Palabras clave relevantes para tu industria y los puestos a los que aplicas (para ATS).', points: 3, correct: true, feedback: { strength: 'Conocimiento de optimización para ATS.', area: 'Investigar y usar palabras clave para ATS.' } },
+                                    { text: 'Una carta de presentación genérica que usas para todas las postulaciones.', points: 0, correct: false, feedback: { strength: '', area: 'Personalizar la carta de presentación para cada postulación.' } }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            };
+
+            // Elementos del DOM
+            const introScreen = document.getElementById('intro-screen');
+            const startTestButton = document.getElementById('start-test-button');
+            const questionSection = document.getElementById('question-section');
+            const blockTitle = document.getElementById('block-title');
+            const questionImage = document.getElementById('question-image');
+            const questionAudio = document.getElementById('question-audio'); // Para audios predefinidos
+            const questionText = document.getElementById('question-text');
+            const answerOptionsDiv = document.getElementById('answer-options');
+            const prevQuestionButton = document.getElementById('prev-question-button');
+            const nextQuestionButton = document.getElementById('next-question-button');
+            const resultsSection = document.getElementById('results-section');
+            const overallDiagnosisDiv = document.getElementById('overall-diagnosis');
+            const overallLevelSpan = document.getElementById('overall-level');
+            const overallSuggestionsP = document.getElementById('overall-suggestions');
+            const blockResultsDiv = document.getElementById('block-results');
+            const downloadPdfButton = document.getElementById('download-pdf-button');
+
+            // Elementos del modal
+            const customModal = document.getElementById('custom-modal');
+            const modalMessage = document.getElementById('modal-message');
+            const closeButton = document.querySelector('.close-button');
+            const modalOkButton = document.getElementById('modal-ok-button');
+
+            // Elementos específicos para audio upload
+            const audioUploadControls = document.getElementById('audio-upload-controls');
+            const audioFileInput = document.getElementById('audio-file-input');
+            const uploadedAudioPlayer = document.getElementById('uploaded-audio-player');
+            const continueAudioButton = document.getElementById('continue-audio-button');
+            const audioPromptMessage = document.getElementById('audio-prompt-message');
+
+
+            // Estado del test
+            let currentBlockIndex = 0;
+            let currentQuestionIndex = 0;
+            let userAnswers = {}; // Almacena respuestas: { blockId: { questionId: { selectedOptions: [], textInput: '', detailedFeedback: '', audioFile: null, audioPlayed: false } } }
+            let blockScores = {}; // Almacena puntuaciones por bloque: { blockId: score }
+            let totalScore = 0;
+            let maxTotalPossibleScore = 0; // Para calcular el porcentaje total
+
+            // Función para mostrar el modal personalizado
+            function showModal(message) {
+                modalMessage.textContent = message;
+                customModal.classList.remove('hidden'); // Muestra el modal
+            }
+
+            // Función para ocultar el modal personalizado
+            function hideModal() {
+                customModal.classList.add('hidden'); // Oculta el modal
+            }
+
+            // Cerrar modal al hacer clic en 'x' o en el botón 'OK'
+            closeButton.onclick = hideModal;
+            modalOkButton.onclick = hideModal;
+            window.onclick = function(event) {
+                if (event.target == customModal) {
+                    hideModal();
+                }
+            };
+
+            // Inicializar userAnswers y blockScores y calcular maxTotalPossibleScore
+            testData.blocks.forEach(block => {
+                userAnswers[block.id] = {};
+                blockScores[block.id] = 0;
+                block.questions.forEach(question => {
+                    userAnswers[block.id][question.id] = { selectedOptions: [], textInput: '', detailedFeedback: '', audioFile: null, audioPlayed: false };
+                    // Calcular la puntuación máxima posible para cada pregunta
+                    let questionMaxScore = 0;
+                    if (question.type === 'single') {
+                        questionMaxScore = Math.max(...question.options.map(opt => opt.points));
+                    } else if (question.type === 'multiple') {
+                        // Para preguntas de opción múltiple, la puntuación máxima es la suma de los puntos de las opciones correctas.
+                        questionMaxScore = question.options.filter(opt => opt.correct).reduce((s, opt) => s + opt.points, 0);
+                    } else if (question.type === 'text_input') {
+                        questionMaxScore = 5; // Puntuación máxima para entrada de texto
+                    } else if (question.type === 'audio_upload') {
+                        questionMaxScore = 0; // No suma puntos directamente, solo es un paso
+                    }
+                    maxTotalPossibleScore += questionMaxScore;
+                });
+            });
+
+            // Función para renderizar la pregunta actual
+            function renderQuestion() {
+                console.log('Entering renderQuestion(). Current block:', currentBlockIndex, 'Question:', currentQuestionIndex);
+                const currentBlock = testData.blocks[currentBlockIndex];
+                const currentQuestion = currentBlock.questions[currentQuestionIndex];
+
+                blockTitle.textContent = currentBlock.title;
+                questionText.textContent = currentQuestion.text;
+                console.log('Question text and title set.');
+
+                // Manejar la visualización de imagen, audio predefinido y controles de audio upload
+                questionImage.classList.add('hidden'); // Ocultar imagen por defecto
+                questionAudio.classList.add('hidden'); // Ocultar audio por defecto
+                audioUploadControls.classList.add('hidden'); // Ocultar controles de subida de audio por defecto
+                audioPromptMessage.classList.add('hidden'); // Ocultar mensaje de audio por defecto
+
+                questionAudio.pause(); // Pausar cualquier audio en reproducción
+                uploadedAudioPlayer.pause(); // Pausar audio subido
+
+                if (currentQuestion.type === 'audio_upload') {
+                    questionImage.src = getUploadedFileUrl(currentQuestion.image); // Usar la imagen específica para audio upload
+                    questionImage.classList.remove('hidden');
+                    audioUploadControls.classList.remove('hidden');
+                    nextQuestionButton.classList.add('hidden'); // Ocultar botón 'Siguiente' general
+                    audioPromptMessage.classList.remove('hidden'); // Mostrar mensaje de audio
+
+                    // Cargar audio si ya se había subido
+                    if (userAnswers[currentBlock.id][currentQuestion.id].audioFile) {
+                        uploadedAudioPlayer.src = userAnswers[currentBlock.id][currentQuestion.id].audioFile;
+                        continueAudioButton.disabled = !userAnswers[currentBlock.id][currentQuestion.id].audioPlayed;
+                        audioPromptMessage.textContent = 'Audio cargado. Escúchalo y luego haz clic en Continuar.';
+                    } else {
+                        uploadedAudioPlayer.src = '';
+                        continueAudioButton.disabled = true;
+                        audioPromptMessage.textContent = 'Sube un audio para continuar.';
+                    }
+                } else if (currentQuestion.audio) {
+                    questionAudio.src = currentQuestion.audio;
+                    questionAudio.classList.remove('hidden');
+                    nextQuestionButton.classList.remove('hidden');
+                } else {
+                    // Si no es audio_upload y no tiene audio predefinido, la imagen permanece oculta
+                    nextQuestionButton.classList.remove('hidden');
+                }
+                console.log('Image/Audio setup complete.');
+
+                answerOptionsDiv.innerHTML = ''; // Limpiar opciones anteriores
+                // Asegurar que el contenedor de opciones sea flex y centre sus elementos
+                answerOptionsDiv.classList.add('flex', 'flex-col', 'items-center', 'space-y-4');
+                // Eliminar cualquier clase de grid que pudiera estar presente de iteraciones anteriores
+                answerOptionsDiv.classList.remove('grid', 'grid-cols-1', 'md:grid-cols-2', 'lg:grid-cols-3', 'xl:grid-cols-4', 'gap-4');
+
+
+                // Renderizar opciones según el tipo de pregunta
+                if (currentQuestion.type === 'single') {
+                    currentQuestion.options.forEach((option, index) => {
+                        const button = document.createElement('button');
+                        button.textContent = option.text;
+                        button.classList.add('answer-button', 'py-3', 'px-6', 'rounded-lg', 'font-semibold', 'text-white', 'text-lg', 'shadow-md', 'w-full', 'max-w-md'); // Added w-full max-w-md for consistent width
+                        button.dataset.index = index;
+                        button.dataset.points = option.points;
+
+                        // Restaurar el estado seleccionado
+                        if (userAnswers[currentBlock.id][currentQuestion.id].selectedOptions.includes(index)) {
+                            button.classList.add('selected');
+                        }
+
+                        button.addEventListener('click', (e) => {
+                            handleAnswerSelection(currentBlock.id, currentQuestion.id, index, currentQuestion.type, e.target);
+                        });
+                        answerOptionsDiv.appendChild(button);
+                    });
+                } else if (currentQuestion.type === 'multiple') {
+                    currentQuestion.options.forEach((option, index) => {
+                        const label = document.createElement('label');
+                        label.classList.add('custom-checkbox-container', 'text-gray-700');
+                        label.innerHTML = `
+                            <input type="checkbox" data-index="${index}" data-points="${option.points}">
+                            <span class="checkmark"></span>
+                            <span class="option-text">${option.text}</span>
+                        `;
+
+                        // Restaurar el estado seleccionado
+                        const input = label.querySelector('input[type="checkbox"]');
+                        if (userAnswers[currentBlock.id][currentQuestion.id].selectedOptions.includes(index)) {
+                            input.checked = true;
+                        }
+
+                        input.addEventListener('change', (e) => {
+                            // Para selección múltiple con checkboxes, alternar el estado
+                            const optionIndex = parseInt(e.target.dataset.index);
+                            const currentAnswer = userAnswers[currentBlock.id][currentQuestion.id];
+
+                            const indexInSelected = currentAnswer.selectedOptions.indexOf(optionIndex);
+                            if (e.target.checked) {
+                                if (indexInSelected === -1) {
+                                    currentAnswer.selectedOptions.push(optionIndex);
+                                }
+                            } else {
+                                if (indexInSelected > -1) {
+                                    currentAnswer.selectedOptions.splice(indexInSelected, 1);
+                                }
+                            }
+                        });
+                        answerOptionsDiv.appendChild(label);
+                    });
+                } else if (currentQuestion.type === 'text_input') {
+                    const input = document.createElement('textarea');
+                    input.classList.add('w-full', 'p-3', 'border', 'border-gray-300', 'rounded-lg', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500', 'text-gray-700', 'h-32', 'max-w-md');
+                    input.placeholder = 'Escribe tu respuesta aquí...';
+                    input.value = userAnswers[currentBlock.id][currentQuestion.id].textInput || '';
+                    input.addEventListener('input', (e) => {
+                        userAnswers[currentBlock.id][currentQuestion.id].textInput = e.target.value;
+                    });
+                    answerOptionsDiv.appendChild(input);
+                }
+                console.log('Answer options rendered.');
+
+                // Actualizar la visibilidad de los botones de navegación
+                prevQuestionButton.classList.toggle('hidden', currentBlockIndex === 0 && currentQuestionIndex === 0);
+                if (currentQuestion.type !== 'audio_upload') { // El botón Siguiente se maneja distinto para audio_upload
+                    nextQuestionButton.textContent = (currentBlockIndex === testData.blocks.length - 1 && currentQuestionIndex === currentBlock.questions.length - 1) ? 'Ver Resultados' : 'Siguiente';
+                }
+                console.log('Navigation buttons updated.');
+                console.log('Exiting renderQuestion() successfully.');
+            }
+
+            // Manejar la selección de respuestas (simplificada ya que la lógica de múltiple se movió a renderQuestion)
+            function handleAnswerSelection(blockId, questionId, optionIndex, type, targetElement) {
+                const currentAnswer = userAnswers[blockId][questionId];
+
+                if (type === 'single') {
+                    currentAnswer.selectedOptions = [optionIndex];
+                    // Eliminar la clase 'selected' de todos los botones en esta pregunta
+                    document.querySelectorAll('#answer-options button').forEach(button => {
+                        button.classList.remove('selected');
+                    });
+                    // Añadir la clase 'selected' al botón clicado
+                    targetElement.classList.add('selected');
+                }
+                // La lógica para 'multiple' ahora está directamente en el event listener del input checkbox en renderQuestion
+            }
+
+            // Event listener para el input de archivo de audio
+            audioFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        uploadedAudioPlayer.src = e.target.result;
+                        userAnswers[testData.blocks[currentBlockIndex].id][testData.blocks[currentBlockIndex].questions[currentQuestionIndex].id].audioFile = e.target.result;
+                        uploadedAudioPlayer.load(); // Cargar el audio
+                        uploadedAudioPlayer.onloadedmetadata = () => { // Habilitar al cargar metadatos
+                            continueAudioButton.disabled = false;
+                            audioPromptMessage.textContent = 'Audio cargado. Escúchalo y luego haz clic en Continuar.';
+                        };
+                        uploadedAudioPlayer.onplay = () => { // Marcar como reproducido al iniciar
+                            userAnswers[testData.blocks[currentBlockIndex].id][testData.blocks[currentBlockIndex].questions[currentQuestionIndex].id].audioPlayed = true;
+                        };
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    uploadedAudioPlayer.src = '';
+                    continueAudioButton.disabled = true;
+                    userAnswers[testData.blocks[currentBlockIndex].id][testData.blocks[currentBlockIndex].questions[currentQuestionIndex].id].audioFile = null;
+                    userAnswers[testData.blocks[currentBlockIndex].id][testData.blocks[currentBlockIndex].questions[currentQuestionIndex].id].audioPlayed = false;
+                    audioPromptMessage.textContent = 'Sube un audio para continuar.';
+                }
+            });
+
+            // Event listener para el botón "Continuar" del audio
+            continueAudioButton.addEventListener('click', () => {
+                // Validar que el audio se haya subido y reproducido al menos una vez
+                const currentBlock = testData.blocks[currentBlockIndex];
+                const currentQuestion = currentBlock.questions[currentQuestionIndex];
+
+                if (!userAnswers[currentBlock.id][currentQuestion.id].audioFile) {
+                    showModal('Por favor, sube un archivo de audio para continuar.');
+                    return;
+                }
+                if (!userAnswers[currentBlock.id][currentQuestion.id].audioPlayed) {
+                    showModal('Por favor, reproduce el audio al menos una vez para continuar.');
+                    return;
+                }
+                nextQuestionButton.click(); // Simular clic en el botón Siguiente
+            });
+
+            // Calcular la puntuación de una sola pregunta
+            function calculateQuestionScore(blockId, questionId) {
+                const currentQuestionData = testData.blocks.find(b => b.id === blockId).questions.find(q => q.id === questionId);
+                const answer = userAnswers[blockId][questionId];
+                let score = 0;
+                let detailedFeedback = '';
+
+                if (currentQuestionData.type === 'single') {
+                    if (answer.selectedOptions.length > 0) {
+                        score = currentQuestionData.options[answer.selectedOptions[0]].points;
+                    }
+                } else if (currentQuestionData.type === 'multiple') {
+                    currentQuestionData.options.forEach((option, index) => {
+                        const isSelected = answer.selectedOptions.includes(index);
+                        if (option.correct && isSelected) {
+                            score += option.points; // Suma si es correcta y está seleccionada
+                        } else if (!option.correct && isSelected) {
+                            score -= option.points; // Resta si es incorrecta y está seleccionada
+                            if (score < 0) score = 0; // Asegura que el score no sea negativo
+                        }
+                    });
+                } else if (currentQuestionData.type === 'text_input') {
+                    const text = answer.textInput.trim();
+                    const feedbackTemplate = currentQuestionData.feedback_template;
+                    let tempScore = 0;
+
+                    // Score based on length
+                    if (text.length > 10) tempScore += 1;
+                    if (text.length > 50) tempScore += 2;
+                    if (text.length > 100) tempScore += 1; // Bonus for very detailed
+
+                    // Score based on keywords
+                    let keywordsFound = 0;
+                    if (feedbackTemplate && feedbackTemplate.keywords) {
+                        feedbackTemplate.keywords.forEach(keyword => {
+                            if (text.toLowerCase().includes(keyword)) {
+                                keywordsFound++;
+                            }
+                        });
+                    }
+                    tempScore += Math.min(keywordsFound, 2); // Max 2 points from keywords
+
+                    score = tempScore;
+                    if (score > 5) score = 5; // Cap score at max 5
+
+                    // Generate detailed feedback for text input questions
+                    if (score >= 4) {
+                        detailedFeedback = feedbackTemplate.excellent;
+                    } else if (score >= 2) {
+                        detailedFeedback = feedbackTemplate.good;
+                        const missingKeywords = (feedbackTemplate.keywords || []).filter(keyword => !text.toLowerCase().includes(keyword));
+                        if (missingKeywords.length > 0) {
+                            detailedFeedback += ` Considera incorporar más sobre: ${missingKeywords.join(', ')}.`;
+                        }
+                    } else {
+                        detailedFeedback = feedbackTemplate.poor;
+                    }
+                }
+                userAnswers[blockId][questionId].score = score; // Almacenar la puntuación con la respuesta
+                userAnswers[blockId][questionId].detailedFeedback = detailedFeedback; // Almacenar el feedback detallado
+            }
+
+            // Calcular puntuaciones totales para bloques y general
+            function calculateAllScores() {
+                totalScore = 0;
+                testData.blocks.forEach(block => {
+                    let blockCurrentScore = 0;
+                    block.questions.forEach(question => {
+                        // Solo calcula la puntuación si no es un tipo de "paso" como audio_upload
+                        if (question.type !== 'audio_upload' && userAnswers[block.id][question.id] && userAnswers[block.id][question.id].score !== undefined) {
+                            blockCurrentScore += userAnswers[block.id][question.id].score;
+                        }
+                    });
+                    blockScores[block.id] = blockCurrentScore;
+                    totalScore += blockCurrentScore;
+                });
+            }
+
+            // Manejadores de navegación
+            startTestButton.addEventListener('click', () => {
+                console.log('Start button clicked.');
+                introScreen.classList.add('hidden');
+                console.log('Intro screen hidden.');
+                questionSection.classList.remove('hidden');
+                console.log('Question section shown.');
+                try {
+                    renderQuestion();
+                    console.log('renderQuestion() executed successfully.');
+                } catch (error) {
+                    console.error('Error during renderQuestion():', error);
+                    showModal('Ocurrió un error al cargar la pregunta. Por favor, inténtalo de nuevo. Revisa la consola para más detalles.');
+                }
+            });
+
+            nextQuestionButton.addEventListener('click', () => {
+                const currentBlock = testData.blocks[currentBlockIndex];
+                const currentQuestion = currentBlock.questions[currentQuestionIndex];
+
+                // Validar respuesta antes de avanzar
+                if (currentQuestion.type === 'single' && userAnswers[currentBlock.id][currentQuestion.id].selectedOptions.length === 0) {
+                    showModal('Por favor, selecciona una opción para continuar.');
+                    return;
+                }
+                if (currentQuestion.type === 'multiple' && userAnswers[currentBlock.id][currentQuestion.id].selectedOptions.length === 0) {
+                    showModal('Por favor, selecciona al menos una opción para continuar.');
+                    return;
+                }
+                if (currentQuestion.type === 'text_input' && !userAnswers[currentBlock.id][currentQuestion.id].textInput.trim()) {
+                    showModal('Por favor, ingresa tu respuesta en el campo de texto.');
+                    return;
+                }
+                // Validación específica para audio_upload (ya manejada en continueAudioButton click)
+                if (currentQuestion.type === 'audio_upload') {
+                    // Si llegamos aquí, significa que el usuario no usó el botón "Continuar" del audio
+                    // Esto no debería pasar si la lógica del botón "Siguiente" está bien, pero para seguridad:
+                    if (!userAnswers[currentBlock.id][currentQuestion.id].audioFile || !userAnswers[currentBlock.id][currentQuestion.id].audioPlayed) {
+                        showModal('Por favor, sube y reproduce el audio para continuar.');
+                        return;
+                    }
+                }
+
+                // Calcular la puntuación de la pregunta actual antes de avanzar
+                // No calcular score para audio_upload, ya que es un paso
+                if (currentQuestion.type !== 'audio_upload') {
+                    calculateQuestionScore(currentBlock.id, currentQuestion.id);
+                }
+
+
+                currentQuestionIndex++;
+                if (currentQuestionIndex < currentBlock.questions.length) {
+                    renderQuestion();
+                } else {
+                    currentBlockIndex++;
+                    currentQuestionIndex = 0;
+                    if (currentBlockIndex < testData.blocks.length) {
+                        renderQuestion();
+                    } else {
+                        // Fin del test
+                        calculateAllScores();
+                        displayResults();
+                    }
+                }
+            });
+
+            prevQuestionButton.addEventListener('click', () => {
+                currentQuestionIndex--;
+                if (currentQuestionIndex < 0) {
+                    currentBlockIndex--;
+                    if (currentBlockIndex < 0) {
+                        currentBlockIndex = 0; // Permanecer en el primer bloque, primera pregunta
+                        currentQuestionIndex = 0;
+                        introScreen.classList.remove('hidden');
+                        questionSection.classList.add('hidden');
+                        return;
+                    }
+                    currentQuestionIndex = testData.blocks[currentBlockIndex].questions.length - 1;
+                }
+                renderQuestion();
+            });
+
+            // Función para generar y descargar el PDF
+            function generateAndDownloadPdf() {
+                const doc = new jsPDF();
+                let yOffset = 20;
+                const margin = 14;
+                const lineHeight = 7;
+                const maxWidth = 180; // Ancho máximo para el texto
+
+                // Add overall diagnosis to PDF
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(18);
+                doc.text('Diagnóstico de Empleabilidad Profesional', margin, yOffset);
+                yOffset += 10;
+                doc.setFontSize(12);
+                doc.text('Lic. Eliana Pablos', margin, yOffset);
+                yOffset += 15;
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(16);
+                doc.text('Diagnóstico General:', margin, yOffset);
+                yOffset += lineHeight;
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(12);
+                doc.text(`Nivel General: ${overallLevelSpan.textContent}`, margin, yOffset);
+                yOffset += lineHeight;
+                const splitOverallSuggestions = doc.splitTextToSize(overallSuggestionsP.textContent, maxWidth);
+                doc.text(splitOverallSuggestions, margin, yOffset);
+                yOffset += (splitOverallSuggestions.length * lineHeight) + 10;
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(16);
+                doc.text('Resultados por Bloque:', margin, yOffset);
+                yOffset += 10;
+
+                testData.blocks.forEach(block => {
+                    const maxPossibleBlockScore = block.questions.reduce((sum, q) => {
+                        if (q.type === 'multiple') {
+                            return sum + q.options.filter(opt => opt.correct).reduce((s, opt) => s + opt.points, 0);
+                        } else if (q.type === 'single') {
+                            return sum + Math.max(...q.options.map(opt => opt.points));
+                        } else if (q.type === 'text_input') {
+                            return sum + 5; // Max points for text input
+                        } else if (q.type === 'audio_upload') {
+                            return sum + 0; // Audio upload does not add points
+                        }
+                        return sum;
+                    }, 0);
+
+                    const blockScore = blockScores[block.id];
+
+                    let blockLevel = '';
+                    let blockSuggestions = '';
+                    let keyStrengths = new Set();
+                    let areasForDevelopment = new Set();
+
+                    block.questions.forEach(question => {
+                        const answer = userAnswers[block.id][question.id];
+                        if (question.type === 'single') {
+                            if (answer.selectedOptions.length > 0) {
+                                const feedback = question.options[answer.selectedOptions[0]].feedback;
+                                if (feedback && feedback.strength) keyStrengths.add(feedback.strength);
+                                if (feedback && feedback.area) areasForDevelopment.add(feedback.area);
+                            }
+                        } else if (question.type === 'multiple') {
+                            question.options.forEach((option, index) => {
+                                const isSelected = answer.selectedOptions.includes(index);
+                                if (option.correct && isSelected) {
+                                    if (option.feedback && option.feedback.strength) keyStrengths.add(option.feedback.strength);
+                                } else if (!option.correct && isSelected) { // Seleccionó una opción incorrecta
+                                    if (option.feedback && option.feedback.area) areasForDevelopment.add(option.feedback.area);
+                                } else if (option.correct && !isSelected) { // No seleccionó una opción correcta
+                                    if (option.feedback && option.feedback.area) areasForDevelopment.add(option.feedback.area);
+                                }
+                            });
+                        } else if (question.type === 'text_input') {
+                            if (answer.detailedFeedback) {
+                                 // Para preguntas de texto, el feedback detallado ya es la sugerencia
+                                 if (answer.score >= 4) { // Excelente
+                                     keyStrengths.add(`Tu reflexión sobre "${question.text.substring(0, Math.min(question.text.length, 50))}..." es excelente: ${answer.detailedFeedback}`);
+                                 } else { // Bueno o Pobre
+                                     areasForDevelopment.add(`Necesitas mejorar en "${question.text.substring(0, Math.min(question.text.length, 50))}...": ${answer.detailedFeedback}`);
+                                 }
+                            }
+                        }
+                    });
+
+                    // Determinar el nivel del bloque y las sugerencias
+                    const blockScorePercentage = (blockScore / maxPossibleBlockScore) * 100;
+                    if (blockScorePercentage >= 70) {
+                        blockLevel = 'Alto';
+                        blockSuggestions = '¡Excelente desempeño en esta área! Continúa fortaleciendo estas habilidades y compártelas en tus postulaciones.';
+                    } else if (blockScorePercentage >= 40) {
+                        blockLevel = 'Medio';
+                        blockSuggestions = 'Tienes una base sólida en esta área, pero hay oportunidades para mejorar. Identifica las áreas específicas y busca recursos para desarrollarlas.';
+                    } else {
+                        blockLevel = 'Bajo';
+                        blockSuggestions = 'Esta área requiere atención. Te sugiero enfocarte en los puntos débiles identificados y buscar capacitación o práctica para fortalecerlos.';
+                    }
+
+                    areasForDevelopment.forEach(area => {
+                        if (keyStrengths.has(area)) {
+                            keyStrengths.delete(area);
+                        }
+                    });
+
+                    // Add block results to PDF
+                    if (yOffset + 50 > doc.internal.pageSize.height) { // Comprobar si se necesita una nueva página
+                        doc.addPage();
+                        yOffset = 20;
+                    }
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(14);
+                    doc.text(`${block.title}:`, margin, yOffset);
+            
+                    yOffset += lineHeight;
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(12);
+                    doc.text(`Puntaje: ${blockScore} / ${maxPossibleBlockScore}`, margin, yOffset);
+                    yOffset += lineHeight;
+                    doc.text(`Nivel: ${blockLevel}`, margin, yOffset);
+                    yOffset += lineHeight;
+                    const splitBlockSuggestions = doc.splitTextToSize(blockSuggestions, maxWidth);
+                    doc.text(splitBlockSuggestions, margin, yOffset);
+                    yOffset += (splitBlockSuggestions.length * lineHeight) + lineHeight;
+
+                    if (keyStrengths.size > 0) {
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('Fortalezas Clave:', margin, yOffset);
+                        yOffset += lineHeight;
+                        doc.setFont('helvetica', 'normal');
+                        Array.from(keyStrengths).forEach(s => {
+                            const splitStrength = doc.splitTextToSize(`• ${s}`, maxWidth);
+                            doc.text(splitStrength, margin, yOffset);
+                            yOffset += (splitStrength.length * lineHeight);
+                        });
+                        yOffset += lineHeight;
+                    }
+
+                    if (areasForDevelopment.size > 0) {
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('Áreas de Mejora:', margin, yOffset);
+                        yOffset += lineHeight;
+                        doc.setFont('helvetica', 'normal');
+                        Array.from(areasForDevelopment).forEach(a => {
+                            const splitArea = doc.splitTextToSize(`• ${a}`, maxWidth);
+                            doc.text(splitArea, margin, yOffset);
+                            yOffset += (splitArea.length * lineHeight);
+                        });
+                        yOffset += lineHeight;
+                    }
+                    yOffset += 10;
+                });
+
+                doc.save('Diagnostico_Empleabilidad_Eliana_Pablos.pdf');
+            }
+
+
+            // Función para mostrar los resultados
+            function displayResults() {
+                questionSection.classList.add('hidden');
+                resultsSection.classList.remove('hidden');
+                window.scrollTo(0, 0); // Desplazar al top de la página de resultados
+
+                // Diagnóstico general
+                let overallDiagnosisText = '';
+                let overallLevel = '';
+                const totalScorePercentage = (totalScore / maxTotalPossibleScore) * 100;
+
+                if (totalScorePercentage >= 70) {
+                    overallLevel = 'Alto';
+                    overallDiagnosisText = `¡Felicidades! Tu empleabilidad es *Alta*. Esto significa que posees un perfil profesional robusto y competitivo en el mercado laboral actual. Demuestras una sólida base en autoevaluación, habilidades transferibles, comunicación efectiva, estrategia de búsqueda laboral y documentación clave. Sigue cultivando estas fortalezas y mantente al tanto de las tendencias del sector para seguir destacando.`;
+                } else if (totalScorePercentage >= 40) {
+                    overallLevel = 'Medio';
+                    overallDiagnosisText = `Tu empleabilidad se encuentra en un nivel *Medio*. Cuentas con habilidades y conocimientos valiosos, lo que te posiciona como un candidato con potencial. Sin embargo, hemos identificado áreas específicas donde puedes enfocar tus esfuerzos para optimizar aún más tu perfil. Con dedicación en estas mejoras, aumentarás significativamente tus oportunidades de éxito en la búsqueda laboral y en tu desarrollo profesional.`;
+                } else {
+                    overallLevel = 'Bajo';
+                    overallDiagnosisText = `Tu empleabilidad se clasifica como *Baja*. Esto indica que hay varias áreas clave en las que es fundamental trabajar para fortalecer tu perfil y competitividad. No te desanimes; este diagnóstico es una valiosa oportunidad para identificar dónde concentrar tus esfuerzos. Te recomendamos enfocarte en las áreas de mejora sugeridas en cada bloque, buscando capacitación y práctica para construir una base más sólida.`;
+                }
+                overallLevelSpan.textContent = overallLevel;
+                overallSuggestionsP.textContent = overallDiagnosisText;
+
+                // Resultados específicos por bloque
+                blockResultsDiv.innerHTML = '';
+                testData.blocks.forEach(block => {
+                    const maxPossibleBlockScore = block.questions.reduce((sum, q) => {
+                        if (q.type === 'multiple') {
+                            return sum + q.options.filter(opt => opt.correct).reduce((s, opt) => s + opt.points, 0);
+                        } else if (q.type === 'single') {
+                            return sum + Math.max(...q.options.map(opt => opt.points));
+                        } else if (q.type === 'text_input') {
+                            return sum + 5; // Max points for text input
+                        } else if (q.type === 'audio_upload') {
+                            return sum + 0; // Audio upload does not add points
+                        }
+                        return sum;
+                    }, 0);
+
+                    const blockScore = blockScores[block.id];
+
+                    let blockLevel = '';
+                    let blockSuggestions = '';
+                    let keyStrengths = new Set();
+                    let areasForDevelopment = new Set();
+
+                    block.questions.forEach(question => {
+                        const answer = userAnswers[block.id][question.id];
+                        if (question.type === 'single') {
+                            if (answer.selectedOptions.length > 0) {
+                                const feedback = question.options[answer.selectedOptions[0]].feedback;
+                                if (feedback && feedback.strength) keyStrengths.add(feedback.strength);
+                                if (feedback && feedback.area) areasForDevelopment.add(feedback.area);
+                            }
+                        } else if (question.type === 'multiple') {
+                            question.options.forEach((option, index) => {
+                                const isSelected = answer.selectedOptions.includes(index);
+                                if (option.correct && isSelected) {
+                                    if (option.feedback && option.feedback.strength) keyStrengths.add(option.feedback.strength);
+                                } else if (!option.correct && isSelected) { // Seleccionó una opción incorrecta
+                                    if (option.feedback && option.feedback.area) areasForDevelopment.add(option.feedback.area);
+                                } else if (option.correct && !isSelected) { // No seleccionó una opción correcta
+                                    if (option.feedback && option.feedback.area) areasForDevelopment.add(option.feedback.area);
+                                }
+                            });
+                        } else if (question.type === 'text_input') {
+                            if (answer.detailedFeedback) {
+                                 // Para preguntas de texto, el feedback detallado ya es la sugerencia
+                                 if (answer.score >= 4) { // Excelente
+                                     keyStrengths.add(`Tu reflexión sobre "${question.text.substring(0, Math.min(question.text.length, 50))}..." es excelente: ${answer.detailedFeedback}`);
+                                 } else { // Bueno o Pobre
+                                     areasForDevelopment.add(`Necesitas mejorar en "${question.text.substring(0, Math.min(question.text.length, 50))}...": ${answer.detailedFeedback}`);
+                                 }
+                            }
+                        }
+                    });
+
+                    // Determinar el nivel del bloque y las sugerencias
+                    const blockScorePercentage = (blockScore / maxPossibleBlockScore) * 100;
+                    if (blockScorePercentage >= 70) {
+                        blockLevel = 'Alto';
+                        blockSuggestions = '¡Excelente desempeño en esta área! Continúa fortaleciendo estas habilidades y compártelas en tus postulaciones.';
+                    } else if (blockScorePercentage >= 40) {
+                        blockLevel = 'Medio';
+                        blockSuggestions = 'Tienes una base sólida en esta área, pero hay oportunidades para mejorar. Identifica las áreas específicas y busca recursos para desarrollarlas.';
+                    } else {
+                        blockLevel = 'Bajo';
+                        blockSuggestions = 'Esta área requiere atención. Te sugiero enfocarte en los puntos débiles identificados y buscar capacitación o práctica para fortalecerlos.';
+                    }
+
+                    areasForDevelopment.forEach(area => {
+                        if (keyStrengths.has(area)) {
+                            keyStrengths.delete(area);
+                        }
+                    });
+
+                    // Renderizar los resultados en el DOM (para la sección de resultados HTML)
+                    const blockResultDiv = document.createElement('div');
+                    blockResultDiv.classList.add('bg-gray-50', 'border', 'border-gray-200', 'rounded-lg', 'p-4', 'shadow-sm', 'text-left');
+                    blockResultDiv.innerHTML = `
+                        <h4 class="text-lg font-semibold text-gray-700 mb-2">${block.title}</h4>
+                        <p class="text-gray-600 mb-1">**Puntaje:** ${blockScore} / ${maxPossibleBlockScore}</p>
+                        <p class="text-600 mb-3">**Nivel:** <span class="font-bold text-blue-700">${blockLevel}</span></p>
+                        <p class="text-gray-700 mb-2">${blockSuggestions}</p>
+                        ${keyStrengths.size > 0 ? `<p class="font-semibold text-gray-800 mt-2">Fortalezas Clave:</p><ul class="list-disc list-inside text-gray-600">${Array.from(keyStrengths).map(s => `<li>${s}</li>`).join('')}</ul>` : ''}
+                        ${areasForDevelopment.size > 0 ? `<p class="font-semibold text-gray-800 mt-2">Áreas de Mejora:</p><ul class="list-disc list-inside text-gray-600">${Array.from(areasForDevelopment).map(a => `<li>${a}</li>`).join('')}</ul>` : ''}
+                    `;
+                    blockResultsDiv.appendChild(blockResultDiv);
+                });
+            }
+
+            // Event listener para el botón de descarga de PDF
+            downloadPdfButton.addEventListener('click', generateAndDownloadPdf);
+        });
+    </script>
+</body>
+</html>

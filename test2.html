@@ -1,0 +1,136 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>¿Qué tan caro te está saliendo tu desorden?</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: #fefefe;
+      color: #222;
+    }
+    h1, h2 {
+      color: #b30000;
+    }
+    .categoria {
+      margin-bottom: 2rem;
+    }
+    .categoria h3 {
+      margin-bottom: 0.5rem;
+      color: #444;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.4rem;
+      cursor: pointer;
+    }
+    .resultado {
+      margin-top: 2rem;
+      font-size: 1rem;
+      font-weight: normal;
+      padding: 1rem;
+      border-radius: 8px;
+      display: none;
+    }
+    .verde { background: #d4edda; color: #155724; }
+    .amarillo { background: #fff3cd; color: #856404; }
+    .rojo { background: #f8d7da; color: #721c24; }
+    .asesoria {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #f9f9f9;
+      border-left: 4px solid #b30000;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<h1>✅ Checklist editable</h1>
+<h2>¿Qué tan caro te está saliendo tu desorden?</h2>
+<p>Revisá estos puntos. Marcá los que sentís identificados. Cuantos más marques, más urgente es ordenar.</p>
+
+<form id="testDesorden">
+  <div class="categoria">
+    <h3>🧠 Organización personal</h3>
+    <label><input type="checkbox" name="check"> Me cuesta encontrar archivos o información clave rápidamente</label>
+    <label><input type="checkbox" name="check"> Anoto cosas en varios lados y a veces pierdo datos importantes</label>
+    <label><input type="checkbox" name="check"> No tengo una rutina semanal clara para organizarme</label>
+    <label><input type="checkbox" name="check"> Uso muchas herramientas, pero ninguna de forma constante</label>
+    <label><input type="checkbox" name="check"> Me siento mentalmente saturado/a aunque tenga poco trabajo real</label>
+  </div>
+
+  <div class="categoria">
+    <h3>💸 Dinero y facturación</h3>
+    <label><input type="checkbox" name="check"> No sé exactamente cuánto facturé el mes pasado</label>
+    <label><input type="checkbox" name="check"> A veces me olvido de cobrar o registrar pagos</label>
+    <label><input type="checkbox" name="check"> Me cuesta hacer seguimiento de mis gastos o impuestos</label>
+    <label><input type="checkbox" name="check"> No tengo una estrategia para prever meses flojos de ingresos</label>
+    <label><input type="checkbox" name="check"> Siento que trabajo mucho y gano menos de lo que debería</label>
+  </div>
+
+  <div class="categoria">
+    <h3>⏳ Gestión del tiempo</h3>
+    <label><input type="checkbox" name="check"> Paso mucho tiempo en tareas que no me generan ingresos</label>
+    <label><input type="checkbox" name="check"> Me cuesta cerrar tareas porque siempre hay algo pendiente</label>
+    <label><input type="checkbox" name="check"> Trabajo más horas de las que planeo y nunca alcanzo todo</label>
+    <label><input type="checkbox" name="check"> No tengo bloques de tiempo protegidos para pensar o planificar</label>
+    <label><input type="checkbox" name="check"> Me cuesta decir que no o poner límites con clientes</label>
+  </div>
+
+  <div class="categoria">
+    <h3>🌱 Profesionalismo y reputación</h3>
+    <label><input type="checkbox" name="check"> Me da vergüenza cómo llevo mi parte administrativa</label>
+    <label><input type="checkbox" name="check"> Siento que pierdo oportunidades por falta de respuesta o desorganización</label>
+    <label><input type="checkbox" name="check"> He entregado cosas tarde o de forma improvisada</label>
+    <label><input type="checkbox" name="check"> No tengo un sistema para hacer seguimiento de clientes o proyectos</label>
+    <label><input type="checkbox" name="check"> Siento que mi imagen profesional no refleja todo lo que puedo dar</label>
+  </div>
+</form>
+
+<div id="resultado" class="resultado"></div>
+
+<div class="asesoria">
+  👉 Gracias por pedirme el material 🙌<br><br>
+  Te dejo el checklist para que revises en qué punto estás. Es una herramienta rápida y honesta para ver cuánto te está afectando (y por dónde podés empezar).<br><br>
+  Y si después de hacerlo te gustaría que lo miremos juntxs, te ofrezco una asesoría personalizada 1:1, donde te ayudo a ordenar tus procesos, tus cobros y tu sistema de trabajo.<br><br>
+  Es un encuentro de 60 minutos con recomendaciones reales y aplicables.<br>
+  Si te interesa, escribime y coordinamos.
+</div>
+
+<script>
+  const checks = document.querySelectorAll('input[type="checkbox"]');
+  const resultado = document.getElementById('resultado');
+
+  function calcularResultado() {
+    const total = Array.from(checks).filter(c => c.checked).length;
+    resultado.style.display = "block";
+
+    if (total <= 5) {
+      resultado.className = "resultado verde";
+      resultado.innerHTML = `
+        ✅ <strong>0–5 respuestas marcadas:</strong><br>
+        Vas bien. Tenés una buena base de organización. Con algunos ajustes podrías optimizar mucho más tu trabajo, ganar foco y liberar carga mental.`;
+    } else if (total <= 10) {
+      resultado.className = "resultado amarillo";
+      resultado.innerHTML = `
+        ⚠️ <strong>6–10 respuestas marcadas:</strong><br>
+        Hay señales claras de desorden que te están costando tiempo, energía y dinero. No es grave, pero sí importante de atender cuanto antes.`;
+    } else {
+      resultado.className = "resultado rojo";
+      resultado.innerHTML = `
+        🔴 <strong>11 o más respuestas marcadas:</strong><br>
+        El caos está afectando tu rentabilidad y tu bienestar. Es momento de actuar con decisión. Ordenar tu sistema de trabajo ya no es opcional.`;
+    }
+  }
+
+  checks.forEach(c => c.addEventListener('change', calcularResultado));
+</script>
+
+</body>
+</html>
